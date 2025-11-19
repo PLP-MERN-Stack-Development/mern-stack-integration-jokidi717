@@ -7,13 +7,13 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
+// Load environment variables
+dotenv.config(); // must be before using process.env
+
 // Import routes
 const postRoutes = require('./routes/posts');
 const categoryRoutes = require('./routes/categories');
 const authRoutes = require('./routes/auth');
-
-// Load environment variables
-dotenv.config();
 
 // Initialize Express app
 const app = express();
@@ -54,9 +54,18 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Check if MONGODB_URI is defined
+if (!process.env.MONGODB_URI) {
+  console.error('Error: MONGODB_URI is not defined in .env');
+  process.exit(1);
+}
+
 // Connect to MongoDB and start server
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(PORT, () => {
@@ -71,8 +80,7 @@ mongoose
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
   process.exit(1);
 });
 
-module.exports = app; 
+module.exports = app;
